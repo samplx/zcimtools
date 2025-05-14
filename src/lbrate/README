@@ -1,0 +1,83 @@
+lbrate 1.2 - extract/decompress CP/M LBR archives.
+Copyright (C) 2001-2023 Russell Marks.
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or (at
+your option) any later version.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+
+[The GPL is in COPYING.]
+
+
+Description
+-----------
+
+lbrate extracts/decompresses files from the CP/M LBR format. (It can
+also list and test such archives.) It does this in an unzip-like
+manner, mostly hiding the details of individually compressed and
+renamed files, and transparently deals with the required
+decompression/renaming.
+
+It can also decompress individual CP/M-style Q/Z/Y (squeezed,
+crunched, etc.) files directly, treating them as if they were really
+single-member LBRs.
+
+For more on how lbrate works and how to use it, do "man lbrate" once
+it's installed. You might also want to check the "FILENAME ISSUES"
+section if the description sounded a bit confusing... :-)
+
+
+Installation
+------------
+
+Check the Makefile is ok (it should be), then do "make" and (as root)
+"make install".
+
+
+Who uses LBR files, anyway?
+---------------------------
+
+Even if no-one were ever to create a new LBR file, there's still a lot
+of existing CP/M software that is only available in this format. If
+you're going to use CP/M stuff, you pretty much have to be able to
+read LBRs (and .arc/.ark files, which are extractable with nomarch).
+For example, the Walnut Creek CP/M CD contained well over 4000 LBR
+archives.
+
+
+Is readlzh.c really GPL?
+------------------------
+
+Yes - the original author gave explicit permission for me to do this.
+For the background, read the comment at the top of readlzh.c, and see
+lzhuf-post.txt.
+
+
+Miscellaneous
+-------------
+
+The (truncated) bug11.qqq file demonstrates a bug in earlier versions
+of lbrate which was since fixed. Trying to extract the file with old
+versions of lbrate would (at best) give an out-of-memory error when
+extracting - the current version gives the more appropriate (if
+generic) "error decompressing".
+
+
+Contacting me
+-------------
+
+You can email me at zgedneil@gmail.com.
+
+
+Share and enjoy!
+
+-Rus.

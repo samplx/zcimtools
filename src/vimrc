@@ -1,0 +1,11 @@
+set shiftwidth=4
+set tabstop=4
+set expandtab
+set nobackup
+set nowrap
+set noincsearch
+set nohlsearch
+set nocompatible
+set smarttab
+set modelines=0
+set backspace=2

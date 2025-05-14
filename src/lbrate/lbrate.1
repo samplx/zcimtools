@@ -1,0 +1,226 @@
+.\" -*- nroff -*-
+.\"
+.\" lbrate 1.2 - extract/decompress CP/M LBR archives.
+.\" Copyright (C) 2001-2023 Russell Marks.
+.\"
+.\" This program is free software; you can redistribute it and/or modify
+.\" it under the terms of the GNU General Public License as published by
+.\" the Free Software Foundation; either version 2 of the License, or
+.\" (at your option) any later version.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program.  If not, see <https://www.gnu.org/licenses/>.
+.\"
+.\"
+.\" lbrate.1 - man page
+.\"
+.TH lbrate 1 "8th September, 2023" "Version 1.2" "Archive Extraction"
+.\"
+.\"------------------------------------------------------------------
+.\"
+.SH NAME
+lbrate \- extract/decompress CP/M LBR archives
+.\"
+.\"------------------------------------------------------------------
+.\"
+.SH SYNOPSIS
+.B lbrate
+.RB [ -chlntv ]
+.RI [ archive.lbr ]
+.RI [ match1
+.RI [ match2
+.cc @
+... ]]
+@cc .
+.\"
+.\"------------------------------------------------------------------
+.\"
+.SH DESCRIPTION
+lbrate lists, extracts, or tests CP/M LBR archives. It does this in an
+unzip-like manner, mostly hiding the details of individually
+compressed and renamed files, and transparently deals with the
+required decompression and renaming.
+.PP
+It can also decompress individual CP/M-style Q/Z/Y (squeezed,
+crunched, etc.) files directly, treating them as if they were really
+single-member LBRs.
+.PP
+The default action is to extract all files in the specified archive;
+see
+.B OPTIONS
+below for how to do other things instead.
+.\"
+.\"------------------------------------------------------------------
+.\"
+.SH OPTIONS
+.TP
+.B -c
+use/show creation date (and time) rather than last-modified. (But note
+that many LBRs lack date/time stamps entirely.)
+.TP
+.B -h
+give terse usage help.
+.TP
+.B -l
+list files in archive. If verbose listings are enabled, it shows the
+filename (and the modified filename actually given in the LBR, if the
+file is compressed), compression method,
+.I compressed
+size (the uncompressed size can't be easily determined), and CRC; but
+by default, it just shows the filename and compressed size.
+.TP
+.B -n
+don't decompress files, just extract the files precisely as they are
+stored in the LBR. This also means the possibly-modified LBR filenames
+are used (see
+.B "FILENAME ISSUES"
+below), even when used with
+.RB ` -l '.
+.TP
+.B -t
+test files in archive - check file CRCs at the LBR level, also
+checking file checksums for any compressed files. (If used together
+with
+.RB ` -n ',
+only LBR CRCs are checked.)
+.TP
+.B -v
+give verbose output (when used with
+.RB ` -l ').
+Using
+.RB ` -lv '
+is the easiest way to see the filenames specified in the LBR, which
+are (due to compression/renaming) usually
+.I not
+the original filenames.
+.TP
+.I archive.lbr
+the archive to operate on. You can also specify a CP/M-ish
+individually-compressed file (these have names like `foo.tqt',
+`bar.dzc', and `baz.cym'); these are treated as if they were
+single-entry LBRs.
+.TP
+.IR match1 " etc."
+optionally specify which archive members to list/extract/test. Those
+which match any of these filenames/wildcards are processed. Wildcard
+operators supported are shell-like `*' and `?', but don't forget to
+quote arguments which use these (e.g.
+.RI ` lbrate
+.IR "foo.lbr '*.bar'" ').
+Note that, unless you're using
+.RB ` -n ',
+these matches are always on the original filename (the one lbrate
+normally shows you), and not the (often modified) filename stored in
+the LBR.
+.\"
+.\"------------------------------------------------------------------
+.\"
+.SH "FILENAME ISSUES"
+All this talk of modified filenames is probably rather confusing, so
+here's a brief summary of what the deal is with LBR files for those
+unfamiliar with the situation.
+.PP
+The LBR format in itself is a pure, uncompressed archival format; a
+bit like tar files. But while tar files are normally compressed after
+the component files get bundled together, LBR files normally bundle
+together compressed files.
+.PP
+Now, CP/M is limited to 8.3 file naming, so compressed files weren't
+indicated by adding an extension, but (loosely speaking) by changing
+the 2nd character of the extension. So foo.txt becomes foo.tqt, for
+example. What happens to the original name? Easy, it gets stored in
+the compressed file, and is restored when it's decompressed.
+.PP
+So, there we have the justification for lbrate's behaviour - LBRs are
+often full of weirdly-named files, so it's generally best to peek into
+the start of any compressed files, find the
+.I real
+filename, and use that. Since the compressed file formats all have
+`magic numbers' and can be very reliably detected, this approach is
+pretty much ideal.
+.\"
+.\"------------------------------------------------------------------
+.\"
+.SH "EXTRACTING MULTIPLE ARCHIVES"
+lbrate follows the unzip-like practice of working on only one
+archive per run, with further `filenames' given on the command-line
+actually specifying files to extract (or whatever). The easiest way to
+work on multiple files with lbrate is simply to run it multiple times
+using
+.IR for ;
+for example:
+.PP
+for i in *.{lbr,LBR}; do lbrate -t $i; done
+.PP
+The above would test all LBR archives in the current directory.
+Another example, this time to extract all the squeezed/crunched files:
+.PP
+for i in *.?[qzQZ]*; do lbrate $i; done
+.\"
+.\"------------------------------------------------------------------
+.\"
+.SH TIMESTAMPS
+While the LBR format did support file dates/times, there are a lot of
+LBRs which lack them. lbrate's approach to this is simply to use them
+whenever available. The last-modified date/time is used/shown by
+default; specify
+.RB ` -c '
+to get creation date/time instead.
+.\"
+.\"------------------------------------------------------------------
+.\"
+.SH DIAGNOSTICS
+Given the two-level nature of the extraction process (the raw
+extraction of the file from the LBR, then any required decompression),
+there are (unless
+.RB ` -n '
+is used) two different ways that a corrupted archive can cause reading
+from the LBR to fail. lbrate tries to communicate this in the way
+which seems most reasonable given the way it's being run, as described
+here.
+.PP
+When
+.I testing
+an archive, lbrate gives priority to LBR CRC errors. It only mentions
+an error decompressing when there
+.I "wasn't"
+a CRC error at the LBR level.
+.PP
+When
+.I extracting
+an archive, lbrate considers decompression errors more important; and
+note that currently, a decompression error means no file data is
+written. (Though in this case it does say
+.RI ` "seems valid at LBR level?" '
+if the LBR CRC was ok.) If there's `only' an LBR CRC mismatch, then
+file data is written, but with a warning.
+.\"
+.\"------------------------------------------------------------------
+.\"
+.SH BUGS
+The CRC used by LBR is only 16-bit, so
+.RB ` -t '
+is a less-than-perfect test. The additional checksum test for
+compressed files may improve matters slightly.
+.\"
+.\"------------------------------------------------------------------
+.\"
+.SH SEE ALSO
+.IR nomarch "(1),"
+.IR tar "(1),"
+.IR gzip "(1)"
+.PP
+The CP/M programs `lt' and `lbrext' do something similar.
+.\"
+.\"------------------------------------------------------------------
+.\"
+.SH AUTHOR
+Russell Marks (zgedneil@gmail.com).
+.PP
+The LZH decompression is based on code by Haruhiko Okumura, Haruyasu
+Yoshizaki, and Kenji Rikitake.

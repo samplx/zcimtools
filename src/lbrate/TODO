@@ -1,0 +1,21 @@
+lbrate assumes that hitting EOF should always be a fatal error, and
+exits if it ever hits EOF unexpectedly. But this means that, on some
+truncated archives which weren't made all-at-once (specifically, those
+that don't have file data in the same order as the file directory), it
+sometimes fails to extract files it *could* have rescued. (The CP/M
+CD's du90.lbr is a good example; compare `-t' and `-l' output.)
+
+So, while the default behaviour should *probably* remain as-is, it
+could really do with an `ignore EOF on file data' option for rescuing
+stuff from such archives.
+
+
+Just as with nomarch, it currently holds both each file's compressed
+and uncompressed data in memory. I thought this would be quite a nice
+way of going about it when I started, but now I think stdio is
+probably the better approach. (This would surely be the case in
+lbrate, as the expanded size of compressed files is *not* known in
+advance!) It wouldn't be *too* hard to change, anyway.
+
+
+Optional extraction to stdout might be nice.

@@ -1,0 +1,19 @@
+Begin3
+Title:          UNARJ -- extract, test and view RAR archives
+Version:        2.63a
+Entered-date:   11MAR2002
+Description:    The UNARJ utility is a freeware program distributed with
+                source code and developed for extracting, testing and viewing
+                the contents of archives created with the ARJ archiver.
+                This is a modified version. The directory creation patch was
+		applied.
+Keywords:       archiver, uncompress, unpack, data compression, arj
+Author:         Robert K. Joung robjung@world.std.com
+Original-site:  ftp://ftp.std.com/pub/arj/
+                97799 unarj263.exe
+Primary-site:   ftp://sunsite.unc.edu/pub/Linux/utils/compress/
+                28kB unarj-2.63a.tar.gz
+Platforms:      UNARJ is known to run on the following platforms:
+                DOS, OS/2, Win32, Unix
+Copying-policy: Copyrighted but freely distributable.
+End

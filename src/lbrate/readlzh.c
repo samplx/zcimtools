@@ -1,0 +1,439 @@
+/* lbrate 1.0 - fully extract CP/M `.lbr' archives.
+ * Copyright (C) 2001 Russell Marks. See main.c for license details.
+ *
+ * readlzh.c - read LZH-compressed files.
+ *
+ * This is based on the well-known lzhuf.c. Since the original
+ * licence was at best ambiguous, I asked all three authors if
+ * I could use a modified version of lzhuf.c in a GPL'd program,
+ * and the two who responded agreed.
+ *
+ * (The third, Yoshizaki, is thought by Okumura not likely to object,
+ * perhaps since his code was based on Okumura's lzari.c - which has
+ * always been under the licence mentioned below. :-))
+ *
+ * The following reflects what they consider to be the real licence
+ * on lzhuf.c:
+ *
+ * lzhuf.c
+ * Copyright (C) 1989 Haruhiko Okumura, Haruyasu Yoshizaki, and Kenji Rikitake.
+ * Use, distribute, and modify this program freely.
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "readlzh.h"
+
+
+/********** LZSS compression **********/
+
+/* these are the values required for the "Y" format */
+#define LZ_N		2048
+#define LZ_F		60
+#define THRESHOLD	2
+
+static unsigned int checksum;
+static int oldver,lastchar;
+
+unsigned char text_buf[LZ_N + LZ_F - 1];
+
+
+/* Huffman coding */
+
+#define N_CHAR		(256 + 1 - THRESHOLD + LZ_F)
+/* kinds of characters (character code = 0..N_CHAR-1) */
+#define LZ_T		(N_CHAR * 2 - 1)	/* size of table */
+#define LZ_R		(LZ_T - 1)		/* position of root */
+#define MAX_FREQ	0x8000		/* updates tree when the */
+				   /* root frequency comes to this value. */
+
+
+/* table for decoding the upper 6 bits of position */
+
+/* for decoding */
+unsigned char d_code[256] =
+  {
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
+  0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
+  0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02,
+  0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02,
+  0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03,
+  0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03,
+  0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04,
+  0x05, 0x05, 0x05, 0x05, 0x05, 0x05, 0x05, 0x05,
+  0x06, 0x06, 0x06, 0x06, 0x06, 0x06, 0x06, 0x06,
+  0x07, 0x07, 0x07, 0x07, 0x07, 0x07, 0x07, 0x07,
+  0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08,
+  0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09,
+  0x0A, 0x0A, 0x0A, 0x0A, 0x0A, 0x0A, 0x0A, 0x0A,
+  0x0B, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B,
+  0x0C, 0x0C, 0x0C, 0x0C, 0x0D, 0x0D, 0x0D, 0x0D,
+  0x0E, 0x0E, 0x0E, 0x0E, 0x0F, 0x0F, 0x0F, 0x0F,
+  0x10, 0x10, 0x10, 0x10, 0x11, 0x11, 0x11, 0x11,
+  0x12, 0x12, 0x12, 0x12, 0x13, 0x13, 0x13, 0x13,
+  0x14, 0x14, 0x14, 0x14, 0x15, 0x15, 0x15, 0x15,
+  0x16, 0x16, 0x16, 0x16, 0x17, 0x17, 0x17, 0x17,
+  0x18, 0x18, 0x19, 0x19, 0x1A, 0x1A, 0x1B, 0x1B,
+  0x1C, 0x1C, 0x1D, 0x1D, 0x1E, 0x1E, 0x1F, 0x1F,
+  0x20, 0x20, 0x21, 0x21, 0x22, 0x22, 0x23, 0x23,
+  0x24, 0x24, 0x25, 0x25, 0x26, 0x26, 0x27, 0x27,
+  0x28, 0x28, 0x29, 0x29, 0x2A, 0x2A, 0x2B, 0x2B,
+  0x2C, 0x2C, 0x2D, 0x2D, 0x2E, 0x2E, 0x2F, 0x2F,
+  0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37,
+  0x38, 0x39, 0x3A, 0x3B, 0x3C, 0x3D, 0x3E, 0x3F,
+  };
+
+unsigned char d_len[256] =
+  {
+  0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03,
+  0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03,
+  0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03,
+  0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03,
+  0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04,
+  0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04,
+  0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04,
+  0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04,
+  0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04,
+  0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04,
+  0x05, 0x05, 0x05, 0x05, 0x05, 0x05, 0x05, 0x05,
+  0x05, 0x05, 0x05, 0x05, 0x05, 0x05, 0x05, 0x05,
+  0x05, 0x05, 0x05, 0x05, 0x05, 0x05, 0x05, 0x05,
+  0x05, 0x05, 0x05, 0x05, 0x05, 0x05, 0x05, 0x05,
+  0x05, 0x05, 0x05, 0x05, 0x05, 0x05, 0x05, 0x05,
+  0x05, 0x05, 0x05, 0x05, 0x05, 0x05, 0x05, 0x05,
+  0x05, 0x05, 0x05, 0x05, 0x05, 0x05, 0x05, 0x05,
+  0x05, 0x05, 0x05, 0x05, 0x05, 0x05, 0x05, 0x05,
+  0x06, 0x06, 0x06, 0x06, 0x06, 0x06, 0x06, 0x06,
+  0x06, 0x06, 0x06, 0x06, 0x06, 0x06, 0x06, 0x06,
+  0x06, 0x06, 0x06, 0x06, 0x06, 0x06, 0x06, 0x06,
+  0x06, 0x06, 0x06, 0x06, 0x06, 0x06, 0x06, 0x06,
+  0x06, 0x06, 0x06, 0x06, 0x06, 0x06, 0x06, 0x06,
+  0x06, 0x06, 0x06, 0x06, 0x06, 0x06, 0x06, 0x06,
+  0x07, 0x07, 0x07, 0x07, 0x07, 0x07, 0x07, 0x07,
+  0x07, 0x07, 0x07, 0x07, 0x07, 0x07, 0x07, 0x07,
+  0x07, 0x07, 0x07, 0x07, 0x07, 0x07, 0x07, 0x07,
+  0x07, 0x07, 0x07, 0x07, 0x07, 0x07, 0x07, 0x07,
+  0x07, 0x07, 0x07, 0x07, 0x07, 0x07, 0x07, 0x07,
+  0x07, 0x07, 0x07, 0x07, 0x07, 0x07, 0x07, 0x07,
+  0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08,
+  0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08,
+  };
+
+static unsigned freq[LZ_T + 1];     /* frequency table */
+
+/* pointers to parent nodes, except for the elements [LZ_T..LZ_T + N_CHAR - 1]
+ * which are used to get the positions of leaves corresponding to the codes.
+ */
+static int prnt[LZ_T + N_CHAR];
+
+/* pointers to child nodes (son[], son[] + 1) */
+static int son[LZ_T];
+
+/* for bit/byte reader */
+unsigned int getbuf=0;
+unsigned char getlen=0;
+
+#define ALLOC_BLOCK_SIZE	32768
+
+static unsigned char *data_in_point,*data_in_max;
+static unsigned char *data_out,*data_out_point;
+static int data_out_len,data_out_allocated;
+
+
+static int rawinput(void)
+{
+if(data_in_point<data_in_max)
+  return(*data_in_point++);
+return(-1);
+}
+
+static void rawoutput(int byte)
+{
+if(data_out_len>=data_out_allocated)
+  {
+  data_out_allocated+=ALLOC_BLOCK_SIZE;
+  if((data_out=realloc(data_out,data_out_allocated))==NULL)
+    fprintf(stderr,"lbrate: out of memory!\n"),exit(1);
+  data_out_point=data_out+data_out_len;
+  }
+
+*data_out_point++=byte;
+data_out_len++;
+checksum+=byte;
+}
+
+static int getbit(void)
+{
+int i;
+
+while (getlen <= 8)
+  {
+  if ((lastchar = i = rawinput()) < 0) i = 0;
+  getbuf |= i << (8 - getlen);
+  getlen += 8;
+  }
+i = getbuf;
+getbuf <<= 1;
+getlen--;
+return ((i&0x8000)?1:0);
+}
+
+static int getbyte(void)
+{
+int i;
+
+while (getlen <= 8)
+  {
+  if ((lastchar = i = rawinput()) < 0) i = 0;
+  getbuf |= i << (8 - getlen);
+  getlen += 8;
+  }
+i = getbuf;
+getbuf <<= 8;
+getlen -= 8;
+return ((i >> 8)&255);
+}
+
+
+
+/* initialization of tree */
+
+void start_huff(void)
+{
+int i, j;
+
+for (i = 0; i < N_CHAR; i++)
+  {
+  freq[i] = 1;
+  son[i] = i + LZ_T;
+  prnt[i + LZ_T] = i;
+  }
+i = 0; j = N_CHAR;
+while (j <= LZ_R)
+  {
+  freq[j] = freq[i] + freq[i + 1];
+  son[j] = i;
+  prnt[i] = prnt[i + 1] = j;
+  i += 2; j++;
+  }
+freq[LZ_T] = 0xffff;
+prnt[LZ_R] = 0;
+}
+
+
+/* reconstruction of tree */
+
+void reconst(void)
+{
+int i, j, k;
+unsigned f;
+
+/* collect leaf nodes in the first half of the table */
+/* and replace the freq by (freq + 1) / 2. */
+j = 0;
+for (i = 0; i < LZ_T; i++)
+  {
+  if (son[i] >= LZ_T)
+    {
+    freq[j] = (freq[i] + 1) / 2;
+    son[j] = son[i];
+    j++;
+    }
+  }
+
+/* begin constructing tree by connecting sons */
+for (i = 0, j = N_CHAR; j < LZ_T; i += 2, j++)
+  {
+  k = i + 1;
+  f = freq[j] = freq[i] + freq[k];
+  for (k = j - 1; f < freq[k]; k--);
+  k++;
+  memmove(freq+k+1,freq+k,(j-k)*sizeof(freq[0]));
+  freq[k]=f;
+  memmove(son+k+1,son+k,(j-k)*sizeof(son[0]));
+  son[k]=i;
+  }
+
+/* connect prnt */
+for (i = 0; i < LZ_T; i++)
+  {
+  if ((k = son[i]) >= LZ_T)
+    prnt[k] = i;
+  else
+    prnt[k] = prnt[k + 1] = i;
+  }
+}
+
+
+/* increment frequency of given code by one, and update tree */
+
+void update(int c)
+{
+int i, j, k, l;
+
+if (freq[LZ_R] == MAX_FREQ)
+  reconst();
+
+c = prnt[c + LZ_T];
+do
+  {
+  k = ++freq[c];
+
+  /* if the order is disturbed, exchange nodes */
+  if (k > freq[l = c + 1])
+    {
+    while (k > freq[++l]);
+    l--;
+    freq[c] = freq[l];
+    freq[l] = k;
+
+    i = son[c];
+    prnt[i] = l;
+    if (i < LZ_T) prnt[i + 1] = l;
+
+    j = son[l];
+    son[l] = i;
+
+    prnt[j] = c;
+    if (j < LZ_T) prnt[j + 1] = c;
+    son[c] = j;
+
+    c = l;
+    }
+  }
+while ((c = prnt[c]) != 0);   /* repeat up to root */
+}
+
+
+int decode_char(void)
+{
+unsigned c;
+
+c = son[LZ_R];
+
+/* travel from root to leaf,
+ * choosing the smaller child node (son[]) if the read bit is 0,
+ * the bigger (son[]+1) if 1.
+ */
+while (c < LZ_T)
+  {
+  c += getbit();
+  c = son[c];
+  }
+c -= LZ_T;
+update(c);
+return c;
+}
+
+int decode_position(void)
+{
+unsigned i, j, c;
+
+/* recover upper bits from table */
+i = getbyte();
+c = (unsigned)d_code[i] << (5+oldver);	/* 5, or 6 for 1.x */
+j = d_len[i];
+
+/* read lower bits verbatim */
+j -= 3-oldver;				/* 3, or 2 for 1.x */
+while (j--)
+  {
+  i = (i << 1) + getbit();
+  }
+return c | (i & (oldver?0x3f:0x1f));	/* 0x1f, or 0x3f for 1.x */
+}
+
+
+
+#define READ_WORD(x) (x)=rawinput(),(x)|=(rawinput()<<8)
+
+unsigned char *convert_lzh(unsigned char *data_in,
+                           unsigned long in_len,
+                           unsigned long *out_len_ptr)
+{
+int c,v,checktype,magic,orig_checksum;
+int i,j,k,r;
+
+*out_len_ptr=0;
+
+if((data_out=malloc(data_out_allocated=ALLOC_BLOCK_SIZE))==NULL)
+  fprintf(stderr,"lbrate: out of memory!\n"),exit(1);
+
+data_in_point=data_in; data_in_max=data_in+in_len;
+data_out_point=data_out; data_out_len=0;
+
+READ_WORD(magic);
+if(magic!=MAGIC_LZH)
+  {
+  free(data_out);
+  return(NULL);
+  }
+
+/* skip filename */
+while((c=rawinput())!=0)
+  if(c==-1)
+    {
+    free(data_out);
+    return(NULL);
+    }
+
+/* four info bytes */
+rawinput();
+oldver=((v=rawinput())<0x20?1:0);
+checktype=rawinput();
+rawinput();
+
+getbuf=0;
+getlen=0;
+checksum=0;
+
+start_huff();
+
+r=LZ_N-LZ_F;
+memset(text_buf,32,r);
+
+while((c=decode_char())!=256)	/* 256 = EOF */
+  {
+  if(c<256)
+    {
+    rawoutput(c);
+    text_buf[r++] = c;
+    r&=(LZ_N-1);
+    }
+  else
+    {
+    i=(r-decode_position()-1)&(LZ_N-1);
+    j=c-256+THRESHOLD;
+    for (k = 0; k < j; k++)
+      {
+      c=text_buf[(i+k)&(LZ_N-1)];
+      rawoutput(c);
+      text_buf[r++]=c;
+      r&=(LZ_N-1);
+      }
+    }
+  }
+
+/* lastchar junk is needed because bit(/byte) reader reads a byte
+ * in advance.
+ */
+orig_checksum=lastchar;
+orig_checksum+=256*rawinput();
+
+/* see how the checksum turned out */
+checksum&=0xffff;
+if(checktype==0 && checksum!=orig_checksum)
+  {
+  free(data_out);
+  return(NULL);
+  }
+
+*out_len_ptr=data_out_len;
+return(data_out);
+}

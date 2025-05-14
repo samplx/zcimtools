@@ -1,0 +1,12 @@
+;
+;       SIMPLE EXAMPLE PROGRAM TO TEST MAC80 AND INTERP80
+;
+        ORG     100H
+
+START:  MVI     A,1     ;LOAD A WITH SOME VALUE
+        MVI     B,2     ;LOAD B WITH SOME VALUE
+L1:     MVI     C,3     ;LABEL FOR BREAKPOINT
+        MVI     D,4
+        HLT             ;STOP EMULATION
+
+DONE:   END

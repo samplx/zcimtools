@@ -1,0 +1,34 @@
+1
+ 8080 MACRO ASSEMBLER, VER 3.0        ERRORS = 0      
++                                                                                      PAGE 1
+      
+
+
+                   ;
+                   ;       SIMPLE EXAMPLE PROGRAM TO TEST MAC80 AND INTERP80
+                   ;
+   0100                    ORG     100H
+                    
+   0100   3E01     START:  MVI     A,1     ;LOAD A WITH SOME VALUE
+   0102   0602             MVI     B,2     ;LOAD B WITH SOME VALUE
+   0104   0E03     L1:     MVI     C,3     ;LABEL FOR BREAKPOINT
+   0106   1604             MVI     D,4
+   0108   76               HLT             ;STOP EMULATION
+                    
+   0109            DONE:   END
+ NO PROGRAM ERRORS
+1
+ 8080 MACRO ASSEMBLER, VER 3.0        ERRORS = 0      
++                                                                                      PAGE 2
+      
+
+
+                        SYMBOL TABLE
+
+  * 01
+
+  A      0007      B      0000      C      0001      D      0002      
+  DONE   0109 *    E      0003      H      0004      L      0005      
+  L1     0104 *    M      0006      PSW    0006      SP     0006      
+  START  0100 *    
+

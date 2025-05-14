@@ -1,0 +1,78 @@
+2023-09-08  Russell Marks  <zgedneil@gmail.com>
+
+	* Version 1.2.
+
+	* lbrate.1: bump version/date, update email, and as in nomarch,
+	removed the slightly odd bzip2 mention.
+
+	* README: bump version, update email, mention bug11.qqq, and we
+	can probably lose the Unisys and lar sections 20+ years later.
+
+	* Added bug11.qqq, a deliberately-corrupt example file to
+	demonstrate a bug in previous versions.
+
+	* readhuff.c (convert_huff): fixed erroneous (and huge!) memory
+	allocation attempt if input was truncated at just the right point.
+	This one I can thank gcc's newer warnings for. :-) (This change
+	was ported over from nomarch 1.5.)
+
+	* Makefile: change default man page install dir to
+	/usr/local/share/man/man1. And may as well use -O3.
+
+	* Removed TODO file.
+
+2001-11-30  Russell Marks  <russell.marks@ntlworld.com>
+
+	* Version 1.1.
+
+	* main.c (usage_help): added `-c' to terse summary, which I'd
+	missed before.
+
+	* lbrate.1: slightly clarified use of `-v'.
+
+	* README: fixed typo.
+
+2001-08-30  Russell Marks  <russell.marks@ntlworld.com>
+
+	* main.c: added support for LBR file dates/times. The
+	last-modified stamps are used/shown by default - the `-c' option
+	lets you use/show creation stamps instead.
+
+2001-08-20  Russell Marks  <russell.marks@ntlworld.com>
+
+	* Version 1.0.
+
+2001-08-16  Russell Marks  <russell.marks@ntlworld.com>
+
+	* readlzh.c: removed some unnecessary global vars I'd missed.
+
+2001-08-14  Russell Marks  <russell.marks@ntlworld.com>
+
+	* README: added mention of LZH patent (which doesn't cover
+	decompression).
+
+2001-08-09  Russell Marks  <russell.marks@ntlworld.com>
+
+	* readlzh.c: added support for LZH-compressed files, based on
+	lzhuf.c by Haruhiko Okumura, Haruyasu Yoshizaki, and Kenji
+	Rikitake. (See lzhuf-post.txt for background on this.)
+
+2001-08-08  Russell Marks  <russell.marks@ntlworld.com>
+
+	* main.c: rather than put everyone through the hassle of using
+	separate utils for decompressing individual squeezed/crunched
+	files outside LBRs, I've made lbrate cope with them, treating them
+	as single-entry LBRs. I thought this was important, as lbrate
+	seems to be the only non-CP/M program to cope with ver 1.x
+	crunched files, if nothing else.
+
+	* Now successfully reads and decompresses all non-LZH members of
+	all LBR files on the CP/M CD, except for the 46 LBRs which I've
+	manually verified as being broken with the original CP/M tools.
+
+	* readlzw.c: added support for version 1.x crunched files.
+
+2001-08-04  Russell Marks  <russell.marks@ntlworld.com>
+
+	* Initial version, based on nomarch. Currently reads uncompressed,
+	squeezed, and (ver 2.x) crunched files.

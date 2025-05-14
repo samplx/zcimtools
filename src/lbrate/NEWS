@@ -1,0 +1,11 @@
+* Changes between versions				-*- outline -*-
+
+This file (NEWS) documents the significant changes between all
+versions of lbrate, with the newest changes first.
+
+
+* Changes in lbrate 1.1
+
+Added support for LBR file dates/times. The last-modified stamps are
+used/shown by default - the `-c' option lets you use/show creation
+stamps instead.

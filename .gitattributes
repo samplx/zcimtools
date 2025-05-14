@@ -1,0 +1,14 @@
+text=auto
+
+*.com binary
+*.asm text eol=crlf
+*.csd text eol=crlf
+*.lit text eol=crlf
+*.plm text eol=crlf
+*.mac text eol=crlf
+*.sub text eol=crlf
+*.sh text eol=lf
+*.z80 text eol=crlf
+
+share/isis-wrapper/plm80/4.0/isis.ext text eol=crlf
+

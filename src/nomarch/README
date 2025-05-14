@@ -1,0 +1,63 @@
+nomarch 1.5 - extract old .arc archives.
+Copyright (C) 2001-2023 Russell Marks.
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or (at
+your option) any later version.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+
+[The GPL is in COPYING.]
+
+
+Description
+-----------
+
+nomarch lists/extracts/tests .arc archives. (It also handles .ark
+files, they're exactly the same.) This is a *very* outdated file
+format which should never be used for anything new, but unfortunately,
+you can still run into it every so often (especially if you mess about
+with old CP/M stuff). So nomarch is handy as a way to deal with these
+files.
+
+For more on how nomarch works and how to use it, do "man nomarch" once
+it's installed.
+
+
+Installation
+------------
+
+Check the Makefile is ok (it should be), then do "make" and (as root)
+"make install".
+
+
+Miscellaneous
+-------------
+
+The (truncated) bug14.arc file demonstrates a bug in earlier versions
+of nomarch which was since fixed. Trying to extract the file with old
+versions of nomarch would (at best) give an out-of-memory error when
+extracting - the current version gives the more appropriate (if
+generic) "error extracting file".
+
+The "arc" program gave a segmentation fault on bug14.arc when I last
+tried extracting it with that.
+
+
+Contacting me
+-------------
+
+You can email me at zgedneil@gmail.com.
+
+
+Share and enjoy!
+
+-Rus.
