@@ -319,6 +319,7 @@ ARG DISK_UTILITIES_REPO_URL=https://github.com/keirf/disk-utilities.git
 ARG ZXCC_REPO_URL=https://github.com/agn453/ZXCC.git
 ARG INTEL_HEX_LOADER_REPO_URL=https://github.com/samplx/intel-hex-loader.git
 ARG RUNCPM_REPO_URL=https://github.com/MockbaTheBorg/RunCPM.git
+ARG ALTAIR_TOOLS_REPO_URL=https://github.com/phatchman/altair_tools
 
 ARG LD80_ZIP_ARCHIVE_URL=http://48k.ca/ld80.zip
 ARG LD80_ZIP_ARCHIVE=ld80.zip
@@ -329,7 +330,6 @@ ARG ZMAC_ZIP_ARCHIVE=zmac.zip
 
 COPY --chown=${TOOL_USER}:${TOOL_USER} src/ src/
 
-
 RUN mkdir -p ${ZCIMTOOLS_TARGET_DIR}/bin ${ZCIMTOOLS_TARGET_DIR}/libexec zmac ld80 rz80 \
     && make -C src/hexcom all check install \
     && make -C src/interp80 all check install \
@@ -339,6 +339,12 @@ RUN mkdir -p ${ZCIMTOOLS_TARGET_DIR}/bin ${ZCIMTOOLS_TARGET_DIR}/libexec zmac ld
     && make -C src/plm80-2 all check install \
     && make -C src/plm80-4 all check install \
     && make -C src/unarj all install \
+    && git clone --depth 2 ${ALTAIR_TOOLS_REPO_URL} altair-tools \
+    && cd altair-tools \
+    && cmake . \
+    && make \
+    && cp altairdsk ${ZCIMTOOLS_TARGET_DIR}/bin \
+    && cd .. \
     && git clone --depth 2 ${INTEL_HEX_LOADER_REPO_URL} intel-hex-loader \
     && cd intel-hex-loader \
     && autoreconf -i \

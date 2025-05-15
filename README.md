@@ -5,6 +5,7 @@ emulators, images, et al. for 8080/8085/Z80 systems.
 
 ## Contents
 
+* Altair Tools disk utility
 * Amsterdam Compiler Kit
 * CP/M Programs
 * CPM Tools disk image utilities
@@ -29,6 +30,11 @@ emulators, images, et al. for 8080/8085/Z80 systems.
 * zmac cross assembler
 * ZXCC CP/M
 * Disk Utilities
+
+## Altair Tools Disk Utility
+
+The [Altair Tools](https://github.com/phatchman/altair_tools.git)
+includes a disk utility program that provides access to MITS Altair disk images.
 
 ## Amsterdam Compiler Kit
 
