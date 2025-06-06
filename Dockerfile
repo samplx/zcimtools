@@ -287,7 +287,9 @@ RUN git clone --depth 2 ${Z80PACK_REPO} z80pack \
           DATADIR=${Z80PACK_TARGET_DIR}/share \
           DOCDIR=${Z80PACK_TARGET_DIR}/doc \
     && make -C z80pack/cpmsim/srctools install PREFIX=${Z80PACK_TARGET_DIR} \
-    && make -C z80pack/z80asm install PREFIX=${Z80PACK_TARGET_DIR}
+    && make -C z80pack/z80asm install PREFIX=${Z80PACK_TARGET_DIR} \
+    && mkdir -p ${Z80PACK_TARGET_DIR}/src \
+    && cp -r z80pack/* ${Z80PACK_TARGET_DIR}/src
 
 # ----------------------------------------------------------------------------
 FROM builder AS z88dk
