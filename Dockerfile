@@ -16,7 +16,7 @@
 
 # cSpell:disable
 # ----------------------------------------------------------------------------
-ARG OS_VERSION=12.11
+ARG OS_VERSION=13.0
 FROM debian:${OS_VERSION} AS base
 
 # first create a base image that includes bash, etc. and our user
@@ -87,7 +87,6 @@ RUN groupadd --gid 1000 ${TOOL_USER} \
         libglu1-mesa \
         libgmp10 \
         libpcap0.8 \
-        libpcre3 \
         libpng16-16 \
         libreadline8 \
         libsdl2-2.0-0 \
@@ -158,7 +157,6 @@ RUN mkdir -p ${BUILD_DIR} \
         libmodern-perl-perl \
         libpath-tiny-perl \
         libpcap0.8-dev \
-        libpcre3-dev \
         libpng-dev \
         libreadline-dev \
         libregexp-common-perl \
@@ -217,20 +215,12 @@ RUN git clone --depth 2 ${ACK_REPO} ack \
 
 # ----------------------------------------------------------------------------
 FROM builder AS simh
-ARG CLASSIC_SIMH_ZIP_ARCHIVE_URL=https://simh.trailing-edge.com/sources/simhv312-5.zip
-ARG CLASSIC_SIMH_ZIP_ARCHIVE=simhv312-5.zip
 ARG OPENSIMH_SIMH_REPO=https://github.com/open-simh/simh.git
 ARG OPENSIMH_SIMTOOLS_REPO=https://github.com/open-simh/simtools.git
 
 RUN mkdir -p \
         ${SIMH_TARGET_DIR}/bin \
-        ${SIMH_TARGET_DIR}/classic/bin \
         ${SIMH_TARGET_DIR}/opensimh/bin \
-    && wget --quiet --unlink ${CLASSIC_SIMH_ZIP_ARCHIVE_URL} \
-    && unzip ${CLASSIC_SIMH_ZIP_ARCHIVE} \
-    && make -C sim \
-    && rm -rf sim/BIN/buildtools \
-    && cp sim/BIN/* ${SIMH_TARGET_DIR}/classic/bin \
     && git clone --depth 2 ${OPENSIMH_SIMH_REPO} opensimh \
     && mkdir -p opensimh/cmake/build-ninja \
     && cd opensimh/cmake/build-ninja \

@@ -20,7 +20,6 @@ emulators, images, et al. for 8080/8085/Z80 systems.
 * Pasmo cross-assembler
 * rz80
 * OpenSimH Emulators and Simtools
-* SimH "Classic" v3.12-5 Emulators
 * Thames ISIS Emulator
 * unarj archive tool
 * YAZE Emulator
@@ -142,23 +141,6 @@ although they are not normally used with Altair(8080/Z80) simulations.
 [rz80](http://48k.ca/rz80.html) takes a Z-80 program in `.com`, `.hex` or `.cas` format and runs it until it hits
 a HALT instruction or a JP/JR that branches to itself (i.e., a trivial infinite loop).
 Useful for developing or unit testing Z-80 code without the overhead of a GUI emulator for a Z-80 system.
-
-## SimH "Classic" v3.12-5 Emulators
-
-[SimH](https://simh.trailing-edge.com/) (History Simulator) is a collection of simulators for
-historically significant or just plain interesting computer hardware and software from the past.
-The goal of the project is to create highly portable system simulators and to publish them as
-open-source software on the Internet, with freely available copies of significant or representative software.
-
-### go-classic and go-opensimh utilities
-
-Since there is significant overlap between the OpenSIMH and the "Classic" SIMH programs, there is
-a "switch" in the file system that indicates which is the current default program.
-
-The initial setting is for the "`opensimh`" programs. This means if you execute `altair`, you will get the **OpenSIMH** version of the emulator. In order to switch to the classic versions,
-execute the `go-classic` program. After executing the script, `altair` would execute the **Classic v3.12-5 version** of the emulator. To switch back, use the `go-opensimh` program.
-
-Note: you can always execute a specific emulator using its full path. eg. `/opt/simh/opensimh/bin/altairz80` or `/opt/simh/classic/bin/altair`.
 
 ## Thames ISIS Emulator
 
