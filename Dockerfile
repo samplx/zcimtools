@@ -16,7 +16,7 @@
 
 # cSpell:disable
 # ----------------------------------------------------------------------------
-ARG OS_VERSION=13.0
+ARG OS_VERSION=13.1
 FROM debian:${OS_VERSION} AS base
 
 # first create a base image that includes bash, etc. and our user
@@ -104,6 +104,7 @@ RUN groupadd --gid 1000 ${TOOL_USER} \
         unzip \
         vim \
         wget \
+        zip \
     && mkdir -p \
         ${ACK_TARGET_DIR} \
         ${SIMH_TARGET_DIR} \
