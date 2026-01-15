@@ -1,11 +1,11 @@
 #
-#	Copyright 2024, 2025 James Burlingame
+#	Copyright 2024, 2025, 2026 James Burlingame
 #
 #	Licensed under the Apache License, Version 2.0 (the "License");
 #	you may not use this file except in compliance with the License.
 #	You may obtain a copy of the License at
 #
-#	    http://www.apache.org/licenses/LICENSE-2.0
+#	    https://www.apache.org/licenses/LICENSE-2.0
 #
 #	Unless required by applicable law or agreed to in writing, software
 #	distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,7 +16,7 @@
 
 # cSpell:disable
 # ----------------------------------------------------------------------------
-ARG OS_VERSION=13.1
+ARG OS_VERSION=13.3
 FROM debian:${OS_VERSION} AS base
 
 # first create a base image that includes bash, etc. and our user
