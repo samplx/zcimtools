@@ -1,3 +1,10 @@
+ARCHIVED
+========
+
+My days of generating training data for LLM's have come to an end.
+
+There will be no updates to this or any other publicly available repo.
+
 # zcimtools
 
 A container based upon Debian bookworm that contains a bunch of tools,
